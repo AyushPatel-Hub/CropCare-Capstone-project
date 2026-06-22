@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import os
+import sys
 from google.adk.agents import Agent
 from google.adk.apps import App
 from google.adk.models import Gemini
@@ -30,8 +31,8 @@ mcp_server_path = os.path.abspath(os.path.join(current_dir, "../mcp_server.py"))
 mcp_toolset = McpToolset(
     connection_params=StdioConnectionParams(
         server_params=StdioServerParameters(
-            command="uv",
-            args=["run", "python", mcp_server_path],
+            command=sys.executable,
+            args=[mcp_server_path],
         ),
     ),
 )
