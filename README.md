@@ -1,4 +1,4 @@
-# CropCare - Capstone Project
+# CropCare - Smart Farmer Assistant
 
 CropCare is an interactive, responsive, and aesthetically premium Single Page Application (SPA) designed to empower Indian farmers with data-driven insights. It aggregates environment details, crop suitability calculations, wholesale mandi rates, organic nutrient recipes, growth timeline tracking, rain forecasting, and agricultural news in a single dark-themed glassmorphic dashboard.
 
