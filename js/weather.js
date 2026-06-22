@@ -117,32 +117,127 @@
     triggerRainSimulation('none');
   }
 
+  const STATE_COORDINATES = {
+    punjab: { lat: 31.1471, lon: 75.3412 },
+    maharashtra: { lat: 19.7515, lon: 75.7139 },
+    uttar_pradesh: { lat: 26.8467, lon: 80.9462 },
+    west_bengal: { lat: 22.9868, lon: 87.8550 },
+    kerala: { lat: 10.8505, lon: 76.2711 },
+    rajasthan: { lat: 27.0238, lon: 74.2179 }
+  };
+
   // Update weather cards when location changes
-  function updateLocationWeather(locKey) {
+  async function updateLocationWeather(locKey) {
     const climate = REGION_CLIMATES[locKey];
     if (!climate) return;
 
+    const coords = STATE_COORDINATES[locKey];
+    let temp = climate.temp;
+    let humidity = climate.humidity;
+    let wind = climate.wind;
+    let condition = climate.condition;
+    let icon = climate.icon;
+    let warnings = climate.warnings;
+    let forecast = climate.forecast;
+
+    if (coords) {
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weather_code&daily=precipitation_probability_max&timezone=auto`);
+        if (res.ok) {
+          const data = await res.json();
+          const current = data.current;
+          temp = Math.round(current.temperature_2m);
+          humidity = Math.round(current.relative_humidity_2m);
+          wind = Math.round(current.wind_speed_10m);
+          const precipitation = current.precipitation || 0.0;
+          const code = current.weather_code;
+
+          // Map WMO weather codes to conditions and icons
+          if (code === 0) {
+            condition = "Clear Sky";
+            icon = "fa-sun";
+          } else if ([1, 2, 3].includes(code)) {
+            condition = "Partly Cloudy";
+            icon = "fa-cloud-sun";
+          } else if ([45, 48].includes(code)) {
+            condition = "Foggy";
+            icon = "fa-smog";
+          } else if ([51, 53, 55].includes(code)) {
+            condition = "Drizzle";
+            icon = "fa-cloud-rain";
+          } else if ([61, 63, 65, 66, 67].includes(code)) {
+            condition = "Scattered Showers";
+            icon = "fa-cloud-sun-rain";
+          } else if ([80, 81, 82].includes(code)) {
+            condition = "Heavy Rain";
+            icon = "fa-cloud-showers-heavy";
+          } else if ([95, 96, 99].includes(code)) {
+            condition = "Thunderstorms";
+            icon = "fa-cloud-bolt";
+          }
+
+          // Build dynamic alerts based on live parameters
+          if (precipitation > 8.0) {
+            warnings = "Orange alert: Heavy rainfall detected. Potential waterlogging in low-lying crop fields. Ensure drainage channels are clear.";
+          } else if (precipitation > 2.0) {
+            warnings = "Yellow alert: Moderate rain expected. Postpone foliar spraying of fertilizers to prevent drift.";
+          } else if (temp > 38) {
+            warnings = `Heatwave warning: Extreme temperatures of ${temp}°C. Avoid chemical sprays during peak afternoon hours. Increase irrigation frequency.`;
+          } else if (wind > 22) {
+            warnings = `High wind warning: Wind speeds of ${wind} km/h. Postpone pesticide spraying to prevent chemical drift.`;
+          } else {
+            warnings = "No severe weather alerts. Ideal conditions for standard field activities.";
+          }
+
+          // Daily 7-day precipitation probability
+          if (data.daily && data.daily.precipitation_probability_max) {
+            forecast = data.daily.precipitation_probability_max;
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching live weather:", err);
+      }
+    }
+
     // Dashboard & Weather Section Updates
     updateDOMElements({
-      '#dash-temp': `${climate.temp}°C`,
-      '#dash-humidity': `${climate.humidity}%`,
-      '#dash-wind': `${climate.wind} km/h`,
-      '#dash-rain-chance': `${climate.rainChance}%`,
-      '#dash-condition': climate.condition,
+      '#dash-temp': `${temp}°C`,
+      '#dash-humidity': `${humidity}%`,
+      '#dash-wind': `${wind} km/h`,
+      '#dash-rain-chance': `${forecast[0]}%`,
+      '#dash-condition': condition,
       '#dash-soil-ph': climate.soilPH,
       '#dash-soil-moisture': climate.soilMoisture,
-      '#weather-warning-text': climate.warnings,
+      '#weather-warning-text': warnings,
       '#weather-suitability-text': climate.suitabilityText
     });
 
     // Update main weather display icon
     const wIcon = document.querySelector('#dash-weather-icon');
     if (wIcon) {
-      wIcon.className = `fas ${climate.icon} weather-icon-lg`;
+      wIcon.className = `fas ${icon} weather-icon-lg`;
     }
 
     // Render rain forecast chart
-    renderForecastChart(climate.forecast);
+    renderForecastChart(forecast);
+
+    // Auto-update Rain Simulation based on live rain condition
+    let intensity = 'none';
+    if (condition === 'Heavy Rain' || condition === 'Thunderstorms') {
+      intensity = 'heavy';
+    } else if (condition === 'Scattered Showers') {
+      intensity = 'moderate';
+    } else if (condition === 'Drizzle') {
+      intensity = 'drizzle';
+    }
+    
+    // Set simulator active button and trigger rain particles
+    document.querySelectorAll('.rain-stage').forEach(b => b.classList.remove('active'));
+    const targetBtn = document.querySelector(`.rain-stage[data-rain="${intensity}"]`);
+    if (targetBtn) {
+      targetBtn.classList.add('active');
+    }
+    triggerRainSimulation(intensity);
   }
 
   // Helper function to bulk update text contents

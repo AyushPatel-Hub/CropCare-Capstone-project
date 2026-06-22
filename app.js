@@ -246,6 +246,30 @@
       });
     }
 
+    let sessionInitialized = false;
+
+    async function ensureSessionCreated() {
+      if (sessionInitialized) return true;
+      try {
+        const res = await fetch(apiBase + '/apps/app/users/ayush_farmer/sessions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            sessionId: sessionId
+          })
+        });
+        if (res.ok || res.status === 409) {
+          sessionInitialized = true;
+          return true;
+        }
+      } catch (err) {
+        console.error('Failed to initialize session:', err);
+      }
+      return false;
+    }
+
     // Check if the local ADK server is online
     async function checkServerStatus() {
       try {
@@ -253,6 +277,7 @@
         if (res.ok) {
           if (statusDot) statusDot.className = 'chat-status-dot online';
           if (statusText) statusText.textContent = 'Online';
+          await ensureSessionCreated();
           return true;
         }
       } catch (err) {
@@ -341,45 +366,95 @@
       const region = window.CropCare.currentLocation || 'punjab';
       const fullQuery = `[Selected Region: ${region}] ${query}`;
 
+      await ensureSessionCreated();
+
       try {
-        const response = await fetch(apiBase + '/run', {
+        const response = await fetch(apiBase + '/run_sse', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            appName: 'app',
-            userId: 'ayush_farmer',
-            sessionId: sessionId,
-            newMessage: {
+            app_name: 'app',
+            user_id: 'ayush_farmer',
+            session_id: sessionId,
+            new_message: {
               role: 'user',
               parts: [{ text: fullQuery }]
-            }
+            },
+            streaming: true
           })
         });
 
         typingIndicator.remove();
 
         if (response.ok) {
-          const events = await response.json();
-          let botText = '';
+          // Create the bot message bubble container where we will stream text
+          const msgDiv = document.createElement('div');
+          msgDiv.className = 'chat-message bot';
+          const bubbleDiv = document.createElement('div');
+          bubbleDiv.className = 'chat-msg-bubble';
+          msgDiv.appendChild(bubbleDiv);
           
-          if (Array.isArray(events)) {
-            events.forEach(evt => {
-              if (evt.content && Array.isArray(evt.content.parts)) {
-                evt.content.parts.forEach(part => {
-                  if (part.text) {
-                    botText += part.text;
-                  }
-                });
-              }
-            });
+          const timeDiv = document.createElement('div');
+          timeDiv.className = 'chat-time';
+          const now = new Date();
+          timeDiv.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          msgDiv.appendChild(timeDiv);
+          
+          messagesContainer.appendChild(msgDiv);
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          let buffer = '';
+          let botText = '';
+
+          function updateBubbleText(text) {
+            // Clean/format markdown syntax to HTML elements
+            bubbleDiv.innerHTML = text
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+              .replace(/\*(.*?)\*/g, '<em>$1</em>')
+              .replace(/`(.*?)`/g, '<code>$1</code>')
+              .replace(/\n/g, '<br>');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
           }
 
-          if (botText) {
-            appendMessage('bot', botText);
-          } else {
-            appendMessage('bot', "I ran the request but didn't receive a text response. Please try rephrasing your question.");
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            
+            // Save the last partial line back to buffer
+            buffer = lines.pop();
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.startsWith('data: ')) {
+                try {
+                  const event = JSON.parse(trimmed.substring(6));
+                  if (event.content && Array.isArray(event.content.parts)) {
+                    event.content.parts.forEach(part => {
+                      if (part.text) {
+                        botText += part.text;
+                        updateBubbleText(botText);
+                      }
+                    });
+                  }
+                } catch (e) {
+                  // Ignore JSON parse errors for incomplete/malformed chunks
+                }
+              }
+            }
+          }
+
+          if (!botText) {
+            bubbleDiv.textContent = "I ran the request but didn't receive a text response. Please try rephrasing your question.";
           }
         } else {
           const errDetail = await response.text();

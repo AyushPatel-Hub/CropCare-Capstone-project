@@ -443,12 +443,104 @@ def get_regional_weather(region: str) -> dict[str, Any]:
     Args:
         region: The region key in lowercase (e.g. 'punjab', 'maharashtra', 'uttar_pradesh', 'west_bengal', 'kerala', 'rajasthan').
     """
+    import requests
+
     key = region.lower().replace(" ", "_")
-    if key in REGION_CLIMATES:
-        return {"status": "success", "data": REGION_CLIMATES[key]}
+    if key not in REGION_CLIMATES:
+        return {
+            "status": "error",
+            "message": f"Region '{region}' not found. Choose from: punjab, maharashtra, uttar_pradesh, west_bengal, kerala, rajasthan.",
+        }
+
+    # Central coordinates mapping for Indian states
+    STATE_COORDINATES = {
+        "punjab": {"lat": 31.1471, "lon": 75.3412},
+        "maharashtra": {"lat": 19.7515, "lon": 75.7139},
+        "uttar_pradesh": {"lat": 26.8467, "lon": 80.9462},
+        "west_bengal": {"lat": 22.9868, "lon": 87.8550},
+        "kerala": {"lat": 10.8505, "lon": 76.2711},
+        "rajasthan": {"lat": 27.0238, "lon": 74.2179},
+    }
+
+    base_profile = REGION_CLIMATES[key]
+    coords = STATE_COORDINATES[key]
+
+    # Fetch live weather parameters from Open-Meteo
+    temp = base_profile["temp"]
+    humidity = base_profile["humidity"]
+    wind = base_profile["wind"]
+    precipitation = 0.0
+    weather_code = 0
+
+    try:
+        url = f"https://api.open-meteo.com/v1/forecast?latitude={coords['lat']}&longitude={coords['lon']}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weather_code"
+        res = requests.get(url, timeout=5)
+        if res.status_code == 200:
+            current = res.json().get("current", {})
+            temp = round(current.get("temperature_2m", temp))
+            humidity = round(current.get("relative_humidity_2m", humidity))
+            wind = round(current.get("wind_speed_10m", wind))
+            precipitation = current.get("precipitation", 0.0)
+            weather_code = current.get("weather_code", 0)
+    except Exception:
+        pass
+
+    # Translate WMO Weather Code to Condition String
+    def get_wmo_condition(code: int) -> str:
+        if code == 0:
+            return "Clear Sky"
+        elif code in [1, 2, 3]:
+            return "Partly Cloudy"
+        elif code in [45, 48]:
+            return "Foggy"
+        elif code in [51, 53, 55]:
+            return "Drizzle"
+        elif code in [61, 63, 65, 66, 67]:
+            return "Scattered Showers"
+        elif code in [80, 81, 82]:
+            return "Heavy Rain"
+        elif code in [95, 96, 99]:
+            return "Thunderstorms"
+        return "Partly Cloudy"
+
+    condition = get_wmo_condition(weather_code)
+
+    # Calculate simulated dynamic soil moisture
+    base_moisture_num = int(base_profile["soilMoisture"].replace("%", ""))
+    dynamic_moisture = base_moisture_num
+    if precipitation > 0:
+        dynamic_moisture += round(precipitation * 4)
+    else:
+        # Scale slightly with humidity difference from 50%
+        dynamic_moisture += round((humidity - 50) * 0.15)
+    dynamic_moisture = max(10, min(98, dynamic_moisture))
+    soil_moisture_str = f"{dynamic_moisture}%"
+
+    # Construct weather alerts/warnings dynamically based on live metrics
+    warnings = "No severe weather alerts. Ideal conditions for standard field activities."
+    if precipitation > 8.0:
+        warnings = "Orange alert: Heavy rainfall detected. Potential waterlogging in low-lying crop fields. Ensure drainage channels are clear."
+    elif precipitation > 2.0:
+        warnings = "Yellow alert: Moderate rain expected. Postpone foliar spraying of fertilizers to prevent drift."
+    elif temp > 38:
+        warnings = f"Heatwave warning: Extreme temperatures of {temp}°C. Avoid chemical sprays during peak afternoon hours. Increase irrigation frequency."
+    elif wind > 22:
+        warnings = f"High wind warning: Wind speeds of {wind} km/h. Postpone pesticide spraying to prevent chemical drift."
+
     return {
-        "status": "error",
-        "message": f"Region '{region}' not found. Choose from: punjab, maharashtra, uttar_pradesh, west_bengal, kerala, rajasthan.",
+        "status": "success",
+        "data": {
+            "name": base_profile["name"],
+            "temp": temp,
+            "humidity": humidity,
+            "rainChance": base_profile["rainChance"] if precipitation == 0 else round(min(100, precipitation * 20)),
+            "wind": wind,
+            "soilPH": base_profile["soilPH"],
+            "soilMoisture": soil_moisture_str,
+            "condition": condition,
+            "warnings": warnings,
+            "suitabilityText": base_profile["suitabilityText"],
+        }
     }
 
 
@@ -544,12 +636,132 @@ def get_mandi_prices(crop_query: str | None = None) -> list[dict[str, Any]]:
     Args:
         crop_query: Optional search keyword to filter crops (e.g. 'Wheat', 'Paddy', 'Onion').
     """
+    import requests
+    import random
+    import time
+
+    # Ticker mapping for major commodities
+    TICKER_MAPPING = {
+        "Paddy (Common)": "ZR=F",
+        "Wheat": "ZW=F",
+        "Cotton (Long Staple)": "CT=F",
+        "Soybean (Yellow)": "ZS=F",
+        "Maize (Corn)": "ZC=F",
+    }
+    TICKER_BASELINES = {
+        "ZR=F": 15.0,
+        "ZW=F": 600.0,
+        "CT=F": 80.0,
+        "ZS=F": 1150.0,
+        "ZC=F": 440.0,
+    }
+
+    # Fetch live weather for Maharashtra (used to dynamically affect vegetable/sugarcane rates)
+    live_rain = 0.0
+    live_temp = 25.0
+    try:
+        weather_res = requests.get(
+            "https://api.open-meteo.com/v1/forecast?latitude=19.7515&longitude=75.7139&current=temperature_2m,precipitation",
+            timeout=5
+        )
+        if weather_res.status_code == 200:
+            current_w = weather_res.json().get("current", {})
+            live_rain = current_w.get("precipitation", 0.0)
+            live_temp = current_w.get("temperature_2m", 25.0)
+    except Exception:
+        pass
+
+    # Build updated rates list
+    updated_rates = []
+    for crop in CROP_RATES:
+        name = crop["name"]
+        base_rate_2026 = crop["mandiRate2026"]
+        base_rate_2025 = crop["mandiRate2025"]
+        category = crop["category"]
+        
+        live_rate_2026 = base_rate_2026
+        live_rate_2025 = base_rate_2025
+        market_status = crop["marketStatus"]
+
+        # Case 1: Ticker-based live crop
+        if name in TICKER_MAPPING:
+            ticker = TICKER_MAPPING[name]
+            baseline = TICKER_BASELINES[ticker]
+            
+            # Fetch live price from Yahoo Finance
+            price = None
+            try:
+                headers = {"User-Agent": "Mozilla/5.0"}
+                res = requests.get(f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}", headers=headers, timeout=5)
+                if res.status_code == 200:
+                    result = res.json().get("chart", {}).get("result")
+                    if result and len(result) > 0:
+                        price = result[0].get("meta", {}).get("regularMarketPrice")
+            except Exception:
+                pass
+
+            if price is not None:
+                scale = price / baseline
+                live_rate_2026 = round(base_rate_2026 * scale)
+                live_rate_2025 = round(base_rate_2025 * (scale * 0.98))
+                
+                # Determine status
+                if scale > 1.05:
+                    market_status = "Bullish"
+                elif scale < 0.95:
+                    market_status = "Bearish"
+                else:
+                    market_status = "Stable"
+            else:
+                # Fallback to hourly noise if API fails
+                seed = int(time.time() / 3600) + hash(name)
+                random.seed(seed)
+                noise = random.uniform(-0.03, 0.03)
+                live_rate_2026 = round(base_rate_2026 * (1.0 + noise))
+                live_rate_2025 = round(base_rate_2025 * (1.0 + noise * 0.9))
+
+        # Case 2: Vegetables and Sugarcane influenced by live weather conditions
+        else:
+            # Seed-based baseline daily noise
+            seed = int(time.time() / 3600) + hash(name)
+            random.seed(seed)
+            weather_multiplier = 1.0
+
+            # Heavy rain increases vegetable rates (Nashik region supply disruption)
+            if live_rain > 5.0 and category == "vegetables":
+                weather_multiplier += (live_rain / 15.0) * 0.1  # up to +15%
+            # High temperatures (heatwaves) dry crops out and raise prices
+            if live_temp > 35.0:
+                weather_multiplier += (live_temp - 35.0) * 0.015  # up to +15%
+                
+            volatility = random.uniform(-0.04, 0.04)
+            live_rate_2026 = round(base_rate_2026 * weather_multiplier * (1.0 + volatility))
+            live_rate_2025 = round(base_rate_2025 * (1.0 + volatility * 0.8))
+
+            if weather_multiplier > 1.05:
+                market_status = "Volatile"
+            elif volatility > 0.02:
+                market_status = "Bullish"
+            elif volatility < -0.02:
+                market_status = "Bearish"
+            else:
+                market_status = "Stable"
+
+        updated_rates.append({
+            "name": name,
+            "category": category,
+            "mandiRate2026": live_rate_2026,
+            "mandiRate2025": live_rate_2025,
+            "marketStatus": market_status,
+            "icon": crop["icon"],
+        })
+
     if not crop_query:
-        return CROP_RATES
+        return updated_rates
 
     query = crop_query.lower()
     filtered = []
-    for crop in CROP_RATES:
+    for crop in updated_rates:
         if (
             query in str(crop.get("name", "")).lower()
             or query in str(crop.get("category", "")).lower()
