@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CropCare - Smart agricultural dashboard for Indian farmers providing weather predictions, crop recommendation, mandi prices, organic fertilizer calculator, crop tracking, and agricultural news.">
+  <title>CropCare - Smart Farmer Assistant</title>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+      <div class="logo-container">
+        <div class="logo-icon">
+          <i class="fas fa-seedling"></i>
+        </div>
+        <div class="logo-text">
+          <h1>CropCare</h1>
+          <span>Smart Agriculture</span>
+        </div>
+      </div>
+      
+      <ul class="nav-links">
+        <li class="active">
+          <a href="#dashboard">
+            <i class="fas fa-cloud-sun"></i>
+            <span>Weather & Climate</span>
+          </a>
+        </li>
+        <li>
+          <a href="#recommender">
+            <i class="fas fa-hand-holding-hand"></i>
+            <span>Crop Recommender</span>
+          </a>
+        </li>
+        <li>
+          <a href="#rates">
+            <i class="fas fa-chart-line"></i>
+            <span>Mandi Rates</span>
+          </a>
+        </li>
+        <li>
+          <a href="#calculator">
+            <i class="fas fa-calculator"></i>
+            <span>Nutrient Calculator</span>
+          </a>
+        </li>
+        <li>
+          <a href="#tracker">
+            <i class="fas fa-list-check"></i>
+            <span>Crop Tracker</span>
+          </a>
+        </li>
+        <li>
+          <a href="#news">
+            <i class="fas fa-newspaper"></i>
+            <span>Agriculture News</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">AP</div>
+          <div class="user-info">
+            <p>Ayush Patel</p>
+            <span>Indian Farmer</span>
+          </div>
+        </div>
+        <button class="theme-toggle theme-toggle-btn" title="Toggle Theme">
+          <i class="fas fa-sun"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN INTERFACE SHELL -->
+    <main class="main-content">
+      
+      <header>
+        <button class="hamburger-btn">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="header-title">
+          <h2>Weather & Climate</h2>
+        </div>
+        
+        <div class="header-controls">
+          <div class="location-selector">
+            <i class="fas fa-location-dot" style="color: var(--primary);"></i>
+            <select id="region-selector" aria-label="Select Region">
+              <option value="punjab" selected>Punjab (North)</option>
+              <option value="maharashtra">Maharashtra (Central)</option>
+              <option value="uttar_pradesh">Uttar Pradesh (North/Central)</option>
+              <option value="west_bengal">West Bengal (East)</option>
+              <option value="kerala">Kerala (South)</option>
+              <option value="rajasthan">Rajasthan (West)</option>
+            </select>
+          </div>
+          
+          <button class="bell-btn theme-toggle-btn" title="Toggle Theme">
+            <i class="fas fa-sun"></i>
+          </button>
+
+          <button class="bell-btn" title="System Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge"></span>
+          </button>
+        </div>
+      </header>
+
+      <div class="view-container">
+
+        <!-- ==========================================
+             VIEW 1: WEATHER & CLIMATE (DASHBOARD)
+             ========================================== -->
+        <section id="dashboard" class="view-section active">
+          
+          <div class="grid-2-1" style="margin-bottom: 24px;">
+            <!-- Current Weather Widget -->
+            <div class="card weather-hero">
+              <div class="weather-header">
+                <div>
+                  <h3 id="dash-condition">Clear Sky</h3>
+                  <p style="color: var(--text-secondary); margin-top: 4px;"><i class="fas fa-calendar"></i> Today's Conditions</p>
+                </div>
+                <i id="dash-weather-icon" class="fas fa-sun weather-icon-lg"></i>
+              </div>
+              
+              <div class="weather-temp-info" style="margin-top: 20px;">
+                <span id="dash-temp" class="weather-temp">34°C</span>
+                <div class="weather-description">
+                  <h3>Optimal Growth Index</h3>
+                  <p>Weather is highly favorable for seasonal harvesting.</p>
+                </div>
+              </div>
+              
+              <div class="weather-stats">
+                <div class="w-stat-card temp">
+                  <i class="fas fa-temperature-half"></i>
+                  <h4>Temperature</h4>
+                  <p id="dash-temp-val">34°C</p>
+                </div>
+                <div class="w-stat-card humidity">
+                  <i class="fas fa-droplet"></i>
+                  <h4>Humidity</h4>
+                  <p id="dash-humidity">45%</p>
+                </div>
+                <div class="w-stat-card rain">
+                  <i class="fas fa-cloud-rain"></i>
+                  <h4>Rain Chance</h4>
+                  <p id="dash-rain-chance">12%</p>
+                </div>
+                <div class="w-stat-card wind">
+                  <i class="fas fa-wind"></i>
+                  <h4>Wind</h4>
+                  <p id="dash-wind">14 km/h</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Environmental Indicators -->
+            <div class="card">
+              <h3 class="card-title"><i class="fas fa-earth-asia"></i> Soil & Environment</h3>
+              
+              <div class="form-group" style="margin-bottom: 16px;">
+                <div class="env-indicator">
+                  <span>Soil Moisture Level</span>
+                  <strong id="dash-soil-moisture">52%</strong>
+                </div>
+                <div class="env-progress-bar">
+                  <div class="env-progress-fill" style="width: 52%; background-color: var(--secondary);"></div>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 16px;">
+                <div class="env-indicator">
+                  <span>Soil pH Level (Optimal 6-7.5)</span>
+                  <strong id="dash-soil-ph">7.2</strong>
+                </div>
+                <div class="env-progress-bar">
+                  <div class="env-progress-fill" style="width: 72%; background-color: var(--primary);"></div>
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
+                <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--accent); margin-bottom: 8px;">Active Advisory:</h4>
+                <p id="weather-warning-text" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">
+                  No severe weather alerts. Ideal conditions for harvesting.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <!-- 7-Day Rain Forecast Chart -->
+            <div class="card">
+              <h3 class="card-title"><i class="fas fa-chart-simple"></i> Rain Forecast (Next 7 Days)</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">Statistical probability of rainfall by weekday based on atmospheric humidity.</p>
+              
+              <div id="rain-forecast-chart" class="forecast-chart-container">
+                <!-- Injected via js/weather.js -->
+              </div>
+            </div>
+
+            <!-- Rain Prediction Tool & Simulator -->
+            <div class="card">
+              <h3 class="card-title"><i class="fas fa-umbrella"></i> Rain Prediction & Impact Simulator</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">Simulate rain scenarios to review warnings and plan field activities.</p>
+              
+              <div class="rain-sim-controls">
+                <button class="rain-stage active" data-rain="none">
+                  <p>None</p>
+                  <h4>Dry</h4>
+                </button>
+                <button class="rain-stage" data-rain="drizzle">
+                  <p>Light</p>
+                  <h4>Drizzle</h4>
+                </button>
+                <button class="rain-stage" data-rain="moderate">
+                  <p>Medium</p>
+                  <h4>Shower</h4>
+                </button>
+                <button class="rain-stage" data-rain="heavy">
+                  <p>Severe</p>
+                  <h4>Downpour</h4>
+                </button>
+              </div>
+
+              <div id="rain-display" class="rain-display-panel">
+                <div class="rain-splash-effect"></div>
+                <div class="rain-info-box">
+                  <i class="fas fa-cloud-showers-water"></i>
+                  <p id="rain-sim-description" style="font-size: 0.85rem; font-weight: 500;">Dry conditions. Soil moisture is constant. Check irrigation schedules.</p>
+                  <p id="rain-sim-action" style="font-size: 0.8rem; color: var(--primary); font-weight: 700; margin-top: 8px;">💡 Action: Irrigate fields if soil moisture is below 40%.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ideal environmental info table -->
+          <div class="card" style="margin-top: 24px;">
+            <h3 class="card-title"><i class="fas fa-circle-info"></i> Optimal Environmental Conditions by Crop</h3>
+            <div style="overflow-x: auto;">
+              <table class="mandi-table">
+                <thead>
+                  <tr>
+                    <th>Crop</th>
+                    <th>Ideal Temp</th>
+                    <th>Annual Rainfall</th>
+                    <th>Ideal Soil pH</th>
+                    <th>Preferred Soil Type</th>
+                  </tr>
+                </thead>
+                <tbody id="env-requirements-body">
+                  <!-- Dynamic content injected -->
+                </tbody>
+              </table>
+            </div>
+            <div style="margin-top: 16px; padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-sm); border: 1px solid var(--border-color-active);">
+              <p style="font-size: 0.8rem; color: var(--primary); line-height: 1.4;">
+                <strong>💡 Quick Tip:</strong> Always cross-reference climate requirements with your regional soil tests before purchasing bulk seeds.
+              </p>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ==========================================
+             VIEW 2: CROP RECOMMENDER
+             ========================================== -->
+        <section id="recommender" class="view-section">
+          <div class="grid-2-1">
+            <!-- Form Card -->
+            <div class="card">
+              <h3 class="card-title"><i class="fas fa-sliders"></i> Environmental Matching Parameters</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">Adjust environmental and soil parameters to match crop suitability scores.</p>
+              
+              <form id="form-recommender">
+                <div class="form-group">
+                  <label for="rec-season">Sowing Season</label>
+                  <select id="rec-season" class="form-select">
+                    <option value="kharif">Kharif (Monsoon Sowing - Rice, Cotton, Sugarcane)</option>
+                    <option value="rabi" selected>Rabi (Winter Sowing - Wheat, Mustard, Onion)</option>
+                    <option value="zaid">Zaid (Summer Sowing - Watermelon, Cucumber, Moong)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="rec-soil">Soil Type</label>
+                  <select id="rec-soil" class="form-select">
+                    <option value="loamy" selected>Loamy / Clay Loam (Rich, retaining moisture)</option>
+                    <option value="sandy">Sandy Soil (High drainage, warms quickly)</option>
+                    <option value="clayey">Clayey Soil (Heavy, water-retentive)</option>
+                    <option value="black">Black Cotton Soil (Rich in clay/lime)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="rec-temp">Average Temperature Range (°C)</label>
+                  <input type="number" id="rec-temp" class="form-input" min="5" max="50" value="18" placeholder="e.g. 20">
+                </div>
+
+                <div class="form-group">
+                  <label for="rec-water">Water / Irrigation Availability</label>
+                  <select id="rec-water" class="form-select">
+                    <option value="low">Low (Dryland / Rain-fed / Desert)</option>
+                    <option value="medium" selected>Medium (Canals / Periodic wells)</option>
+                    <option value="high">High (Flooded beds / Continuous drip)</option>
+                  </select>
+                </div>
+
+                <button type="submit" id="calc-recommend-btn" class="btn btn-primary" style="width: 100%; margin-top: 10px; justify-content: center;">
+                  <i class="fas fa-wand-magic-sparkles"></i> Calculate Recommendations
+                </button>
+              </form>
+            </div>
+
+            <!-- Region Advice Card -->
+            <div class="card">
+              <h3 class="card-title"><i class="fas fa-location-crosshairs"></i> Regional Suitability Brief</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+                Based on your current region selection, the local environment is matched automatically.
+              </p>
+              
+              <div style="padding: 16px; background-color: rgba(0,0,0,0.15); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 20px;">
+                <h4 style="color: var(--primary); font-size: 0.95rem; margin-bottom: 4px;">Soil & Environment Verdict:</h4>
+                <p id="weather-suitability-text" style="font-size: 0.85rem; color: var(--text-secondary);">
+                  Best for Wheat (Rabi) and Rice (Kharif) under canal/tubewell irrigation.
+                </p>
+              </div>
+
+              <h4 style="font-size: 0.9rem; margin-bottom: 8px;">Recommendation Rules:</h4>
+              <ul style="padding-left: 20px; font-size: 0.85rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px;">
+                <li><strong>Season Alignment (40% weight):</strong> Ensures temperature and solar photo-periods fit sowing timelines.</li>
+                <li><strong>Soil Compatibility (25% weight):</strong> Ensures roots can expand and absorb nutrients without rotting.</li>
+                <li><strong>Water Level (15% weight):</strong> Scores tolerance to drought or flooding conditions.</li>
+              </ul>
+            </div>
+          </div>
+
+          <h2 style="font-size: 1.35rem; margin-top: 40px; margin-bottom: 10px;">Recommended Crops</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">Top crop suggestions ranked by suitability match percentage.</p>
+          
+          <div id="recommendations-grid" class="crop-card-grid">
+            <!-- Dynamic Crop Cards Injected here -->
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 3: MANDI RATES
+             ========================================== -->
+        <section id="rates" class="view-section">
+          
+          <div class="card">
+            <h3 class="card-title"><i class="fas fa-indian-rupee-sign"></i> Indian Mandi Rate Tracker</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">Compare this week's wholesale crop rates across major Indian mandis with the rates from last year.</p>
+            
+            <div class="table-controls">
+              <div class="search-wrapper">
+                <i class="fas fa-magnifying-glass"></i>
+                <input type="text" id="mandi-search" class="form-input" placeholder="Search crop names (e.g. Paddy, Wheat)..." aria-label="Search crops">
+              </div>
+              
+              <div class="form-group" style="margin-bottom: 0; flex-direction: row; align-items: center; gap: 10px;">
+                <label for="mandi-filter" style="white-space: nowrap;">Category:</label>
+                <select id="mandi-filter" class="form-select" style="padding-top: 8px; padding-bottom: 8px;">
+                  <option value="all">All Crops</option>
+                  <option value="cereals">Cereals & Grains</option>
+                  <option value="vegetables">Vegetables</option>
+                  <option value="cash">Cash Crops</option>
+                  <option value="oilseeds">Oilseeds</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mandi-table-card">
+              <table class="mandi-table">
+                <thead>
+                  <tr>
+                    <th>Crop Name</th>
+                    <th>Current Rate (2026)</th>
+                    <th>Last Year Rate (2025)</th>
+                    <th>Yearly Shift (%)</th>
+                    <th>6-Month Trend</th>
+                    <th>Market Sentiment</th>
+                  </tr>
+                </thead>
+                <tbody id="mandi-table-body">
+                  <!-- Mandi rates rows injected here -->
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-top: 24px; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 16px;">
+              <span>* Mandi rates are representative averages sourced from Agmarknet reports.</span>
+              <span>Last Sync: June 22, 2026</span>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ==========================================
+             VIEW 4: NUTRIENT CALCULATOR
+             ========================================== -->
+        <section id="calculator" class="view-section">
+          
+          <div class="grid-2">
+            <!-- Calculator Card -->
+            <div class="card split-card">
+              <div>
+                <h3 class="card-title"><i class="fas fa-vial-virus"></i> N-P-K Fertilizer & Pesticide Calculator</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">Calculate required weight quantities of synthetic inputs based on plantation acreage.</p>
+                
+                <form id="form-calculator">
+                  <div class="form-group">
+                    <label for="calc-crop">Target Crop</label>
+                    <select id="calc-crop" class="form-select">
+                      <option value="paddy">Paddy (Rice)</option>
+                      <option value="wheat" selected>Wheat</option>
+                      <option value="cotton">Cotton</option>
+                      <option value="mustard">Mustard</option>
+                      <option value="sugarcane">Sugarcane</option>
+                      <option value="onion">Onion</option>
+                      <option value="potato">Potato</option>
+                    </select>
+                  </div>
+
+                  <div class="grid-2" style="gap: 16px;">
+                    <div class="form-group">
+                      <label for="calc-area">Farming Sowing Area</label>
+                      <input type="number" id="calc-area" class="form-input" min="0.1" step="0.1" value="2.5">
+                    </div>
+                    <div class="form-group">
+                      <label for="calc-unit">Area Unit</label>
+                      <select id="calc-unit" class="form-select">
+                        <option value="acres" selected>Acres</option>
+                        <option value="hectares">Hectares</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <button type="submit" id="calc-run-btn" class="btn btn-primary" style="width: 100%; margin-top: 10px; justify-content: center;">
+                    <i class="fas fa-calculator"></i> Calculate Inputs Demand
+                  </button>
+                </form>
+              </div>
+
+              <!-- Output results panel -->
+              <div class="results-panel">
+                <h4 style="margin-bottom: 12px; font-size: 0.95rem; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Required Conventional Quantities:</h4>
+                
+                <div class="result-item">
+                  <h4>Urea (Nitrogen Source)</h4>
+                  <span id="calc-out-urea">275 kg</span>
+                </div>
+                <div class="result-item">
+                  <h4>SSP (Phosphorus Source)</h4>
+                  <span id="calc-out-ssp">225 kg</span>
+                </div>
+                <div class="result-item">
+                  <h4>MOP (Potash Source)</h4>
+                  <span id="calc-out-mop">75 kg</span>
+                </div>
+                <div class="result-item">
+                  <h4>Chemical Pesticide Liquid</h4>
+                  <span id="calc-out-pesticide">1000 ml</span>
+                </div>
+                
+                <div class="result-item" style="margin-top: 10px; padding-top: 12px; border-top: 1px dashed var(--border-color);">
+                  <h4 style="color: var(--accent);">Net Pure N-P-K Applied</h4>
+                  <span id="calc-out-npk" style="color: var(--accent);">N: 127kg | P: 36kg | K: 45kg</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Natural Farming Promotion Card -->
+            <div class="card organic-promo-card">
+              <h3 class="card-title" style="color: var(--primary);"><i class="fas fa-leaf"></i> Promote Natural & Organic Farming</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+                Chemical fertilizers degrade long-term soil carbon and eradicate beneficial earthworms. Transitioning to natural formulations saves crop expenses and restores natural fertility.
+              </p>
+
+              <!-- Cost savings panel -->
+              <div style="background-color: var(--primary-light); border: 1px solid var(--primary); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <h4 style="font-size: 0.85rem; color: var(--primary);">Chemical Cost Saved (Estimated):</h4>
+                  <p style="font-size: 0.75rem; color: var(--text-secondary);">Using home-farm organic inputs</p>
+                </div>
+                <strong id="organic-savings-cost" style="font-size: 1.8rem; font-family: var(--font-display); color: var(--primary);">₹4,250</strong>
+              </div>
+
+              <div class="form-group">
+                <label>Equivalent Organic Fertilizer Recommendation:</label>
+                <p id="organic-equiv-text" style="font-size: 0.9rem; font-weight: 600; margin-bottom: 10px;">Well-decomposed Farmyard Manure (FYM): 10.0 Tons</p>
+                
+                <label>Bio-Fertilizer Culture (Bacterial Inoculants):</label>
+                <p id="organic-bio-text" style="font-size: 0.9rem; font-weight: 600; margin-bottom: 10px;">Jeevamrita (200L) + Azotobacter culture (2 kg)</p>
+                
+                <label>Organic Pest Management alternative:</label>
+                <p id="organic-pest-text" style="font-size: 0.9rem; font-weight: 600;">Agnihastra (if termites or stem borers appear)</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bio-concoctions recipe card -->
+          <div class="grid-2-1" style="margin-top: 24px;">
+            <div class="card">
+              <div class="form-group" style="flex-direction: row; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 class="card-title" style="margin-bottom: 0;"><i class="fas fa-prescription-bottle-medical"></i> Natural Concoction Recipe Builder</h3>
+                <select id="organic-recipe-select" class="form-select" style="width: auto; padding: 6px 12px; font-size: 0.85rem;">
+                  <option value="jeevamrita">Jeevamrita (Growth Promoter)</option>
+                  <option value="neem_astra">Neem Astra (Sucking Pests)</option>
+                  <option value="agnihastra">Agnihastra (Chewing Pests)</option>
+                </select>
+              </div>
+
+              <div id="organic-recipe-details">
+                <!-- Recipe instructions injected here -->
+              </div>
+            </div>
+
+            <!-- Organic Farming Advice Card -->
+            <div class="card">
+              <h3 class="card-title"><i class="fas fa-shield-heart"></i> Organic Farming Best Practices</h3>
+              <ul style="padding-left: 20px; font-size: 0.85rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 10px; line-height: 1.4;">
+                <li><strong>Crop Rotation:</strong> Intercrop legumes (lentils, moong) between cereal crops to fix nitrogen naturally.</li>
+                <li><strong>Mulching:</strong> Spread dry leaves/wheat straw around plants to preserve moisture, prevent weed growth, and feed soil microbes.</li>
+                <li><strong>Trap Crops:</strong> Sow 1 row of marigold flowers for every 10 rows of cotton or vegetables to trap aphids and nematodes away from the primary crop.</li>
+              </ul>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ==========================================
+             VIEW 5: CROP TRACKER
+             ========================================== -->
+        <section id="tracker" class="view-section">
+          
+          <div class="tracker-header">
+            <div>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">Manage and monitor your seasonal crop timelines from seed germination to harvest.</p>
+            </div>
+            <button id="add-crop-tracker-btn" class="btn btn-primary">
+              <i class="fas fa-seedling"></i> Add New Crop Tracker
+            </button>
+          </div>
+
+          <div id="trackers-list-container" class="trackers-list">
+            <!-- Active trackers cards injected here -->
+          </div>
+
+        </section>
+
+        <!-- ==========================================
+             VIEW 6: AGRICULTURE NEWS
+             ========================================== -->
+        <section id="news" class="view-section">
+          
+          <div class="card" style="margin-bottom: 24px;">
+            <div class="table-controls">
+              <div class="search-wrapper">
+                <i class="fas fa-magnifying-glass"></i>
+                <input type="text" id="news-search" class="form-input" placeholder="Search news articles, schemes, weather..." aria-label="Search news">
+              </div>
+              
+              <div class="news-tabs" style="margin-bottom: 0; padding-bottom: 0;">
+                <button class="news-tab-btn active" data-category="all">All News</button>
+                <button class="news-tab-btn" data-category="schemes">Govt. Schemes</button>
+                <button class="news-tab-btn" data-category="tech">AgriTech</button>
+                <button class="news-tab-btn" data-category="weather">Weather Warnings</button>
+                <button class="news-tab-btn" data-category="organic">Organic/Success</button>
+                <button class="news-tab-btn" data-category="bookmarks"><i class="fas fa-bookmark"></i> Bookmarked</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="news-grid-container" class="news-grid">
+            <!-- News Cards injected here -->
+          </div>
+
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ==========================================
+       MODAL: ADD NEW CROP TRACKER
+       ========================================== -->
+  <div id="modal-add-tracker" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i class="fas fa-seedling" style="color: var(--primary);"></i> Initiate Crop Tracker</h3>
+        <button class="close-btn">&times;</button>
+      </div>
+      
+      <form id="form-add-tracker">
+        <div class="form-group">
+          <label for="track-crop-name">Crop Name</label>
+          <input type="text" id="track-crop-name" class="form-input" placeholder="e.g. Paddy (Basmati), Wheat, Mustard" required>
+        </div>
+
+        <div class="form-group">
+          <label for="track-variety">Crop Variety (Optional)</label>
+          <input type="text" id="track-variety" class="form-input" placeholder="e.g. Pusa Basmati 1509, HD 2967">
+        </div>
+
+        <div class="grid-2" style="gap: 16px;">
+          <div class="form-group">
+            <label for="track-area">Sowing Area</label>
+            <input type="number" id="track-area" class="form-input" min="0.1" step="0.1" value="1.0" required>
+          </div>
+          <div class="form-group">
+            <label for="track-unit">Area Unit</label>
+            <select id="track-unit" class="form-select">
+              <option value="acres" selected>Acres</option>
+              <option value="hectares">Hectares</option>
+              <option value="bighas">Bighas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="track-date">Plantation Sowing Date</label>
+          <input type="date" id="track-date" class="form-input" required>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Start Tracking</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Script references -->
+  <script src="app.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/recommender.js"></script>
+  <script src="js/rates.js"></script>
+  <script src="js/calculator.js"></script>
+  <script src="js/tracker.js"></script>
+  <script src="js/news.js"></script>
+
+  <!-- Auto-fill current date in sowing date input -->
+  <script>
+    document.getElementById('track-date').value = new Date().toISOString().split('T')[0];
+  </script>
+</body>
+</html>
