@@ -650,6 +650,62 @@
   <script src="js/tracker.js"></script>
   <script src="js/news.js"></script>
 
+  <!-- ==========================================
+       CROPCARE AI CHAT ASSISTANT
+       ========================================== -->
+  <button id="chat-toggle-btn" class="chat-bubble-btn" title="Chat with CropCare AI">
+    <i class="fas fa-robot"></i>
+    <span class="chat-notification-dot"></span>
+  </button>
+
+  <div id="chat-assistant-panel" class="chat-panel">
+    <div class="chat-header">
+      <div class="chat-header-title">
+        <i class="fas fa-robot" style="color: var(--primary); font-size: 1.25rem;"></i>
+        <div>
+          <h3>CropCare AI</h3>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span class="chat-status-dot online"></span>
+            <span id="chat-status-text" style="font-size: 0.75rem; color: var(--text-muted);">Online</span>
+          </div>
+        </div>
+      </div>
+      <button id="chat-close-btn" class="chat-close-btn">&times;</button>
+    </div>
+    
+    <div class="chat-body">
+      <div class="chat-messages" id="chat-messages-container">
+        <div class="chat-message bot">
+          <div class="chat-msg-bubble">
+            Namaste! I am CropCare AI, your agricultural assistant. I can help you with:
+            <ul style="margin-top: 8px; margin-left: 16px; padding: 0; display: flex; flex-direction: column; gap: 4px;">
+              <li>🌦️ Regional weather diagnostics</li>
+              <li>🌾 Crop recommendations & tips</li>
+              <li>📊 Fertilizer & pesticide calculations</li>
+              <li>🌱 Organic recipe fermentation steps</li>
+              <li>₹ Indian mandi crop wholesale prices</li>
+            </ul>
+            What would you like to know?
+          </div>
+        </div>
+      </div>
+      
+      <div class="chat-suggestions" id="chat-suggestions-container">
+        <button class="chat-suggest-btn" data-query="Calculate fertilizer for Paddy on 5 acres">📊 Paddy Fertilizer</button>
+        <button class="chat-suggest-btn" data-query="How to make Jeevamrita growth promoter?">🌱 Jeevamrita Recipe</button>
+        <button class="chat-suggest-btn" data-query="What is the mandi price of Wheat?">₹ Wheat Price</button>
+        <button class="chat-suggest-btn" data-query="What is the weather and soil pH in Rajasthan?">🌵 Rajasthan Weather</button>
+      </div>
+    </div>
+
+    <form id="chat-input-form" class="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Ask CropCare AI about farming..." autocomplete="off" required>
+      <button type="submit" class="chat-send-btn" aria-label="Send message">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </form>
+  </div>
+
   <!-- Auto-fill current date in sowing date input -->
   <script>
     document.getElementById('track-date').value = new Date().toISOString().split('T')[0];

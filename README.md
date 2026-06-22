@@ -80,16 +80,31 @@ graph TD
 * **`js/tracker.js`**: Powers CRUD timelines, milestone checklists, and logs saving.
 * **`js/news.js`**: Controls bookmarks and handles category query filters.
 
----
-
 ## 🚀 Local Setup & Execution
 
-1. Clone or copy this project folder into your workspace directory.
-2. Ensure you have Python installed. If not, any static file server (Node `http-server`, etc.) works.
-3. Open your terminal in the project directory and launch a local web server:
+### 1. Frontend Web Dashboard
+1. Open your terminal in the project directory.
+2. Launch a local web server to serve the HTML/CSS/JS dashboard on port **8001** (to avoid clashing with the ADK server on port 8000):
    ```bash
-   python -m http.server 8000
+   python -m http.server 8001
    ```
-4. Open your web browser and load the application:
-   **[http://localhost:8000](http://localhost:8000)**
-5. Drop your application screenshot in the root folder named `screenshot.png` to automatically display it in this README.
+3. Open your web browser and load the application:
+   **[http://localhost:8001](http://localhost:8001)**
+
+### 2. Backend ADK Agent & MCP Server
+1. Ensure you have the `uv` tool installed (standard Python package manager).
+2. Install the Python dependencies (including the ADK and MCP SDKs):
+   ```bash
+   agents-cli install
+   ```
+3. Configure your Google AI Studio Gemini API Key in the environment file:
+   * Open [app/.env](file:///C:/My%20Folder/Capstone%20Project/app/.env)
+   * Replace `YOUR_API_KEY` with your actual Gemini API Key.
+4. Launch the local ADK server:
+   ```bash
+   agents-cli playground
+   # Or run directly via: uv run adk web .
+   ```
+   This will start the local agent server on port **8000** and open the ADK developer playground.
+5. In your web browser at `http://localhost:8001`, click the **CropCare AI** robot bubble in the bottom right corner to start chatting with the agent! The frontend will communicate directly with the local server to run your agricultural queries and call the MCP server tools under the hood.
+
