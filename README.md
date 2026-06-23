@@ -80,31 +80,13 @@ graph TD
 * **`js/tracker.js`**: Powers CRUD timelines, milestone checklists, and logs saving.
 * **`js/news.js`**: Controls bookmarks and handles category query filters.
 
-## 🚀 Local Setup & Execution
+The Model Context Protocol (MCP) Server The custom MCP server (mcp_server.py) acts as a bridge between the AI agent and the external APIs. It packages the raw JSON responses from the Open-Meteo and Yahoo Finance APIs into structured dictionary outputs matching the expected MCP tools schema:
+get_regional_weather(region: str) get_mandi_prices(crop_query: str | None) recommend_crops(season, soil, temp, water_level) get_organic_recipes(recipe_query: str | None)
 
-### 1. Frontend Web Dashboard
-1. Open your terminal in the project directory.
-2. Launch a local web server to serve the HTML/CSS/JS dashboard on port **8001** (to avoid clashing with the ADK server on port 8000):
-   ```bash
-   python -m http.server 8001
-   ```
-3. Open your web browser and load the application:
-   **[http://localhost:8001](http://localhost:8001)**
+ADK and the Chatbot Agent Definition (app/agent.py): Defines an Agent initialized with the Gemini model, custom instructions, and the MCP tools. It communicates with the MCP server running as a sub-process via sys.executable to dynamically execute the tools. FastAPI Server (app/fast_api_app.py): Wraps the ADK app to expose API endpoints. We disabled the default ADK playground UI (web=False) to host the CropCare frontend files directly on the root path / using FastAPI's StaticFiles mount. Real-time SSE Streaming Chat (app.js): Upon chat initialization, the frontend calls POST /apps/app/users/ayush_farmer/sessions to register the session ID in the server's memory. When a question is submitted, it initiates a connection to /run_sse with streaming: true. The frontend reads the stream chunk-by-chunk using a TextDecoder and a buffered loop, parsing data: {…} event payloads as they arrive, enabling the chatbot to output responses word-by-word.
 
-### 2. Backend ADK Agent & MCP Server
-1. Ensure you have the `uv` tool installed (standard Python package manager).
-2. Install the Python dependencies (including the ADK and MCP SDKs):
-   ```bash
-   agents-cli install
-   ```
-3. Configure your Google AI Studio Gemini API Key in the environment file:
-   * Open [app/.env](file:///C:/My%20Folder/Capstone%20Project/app/.env)
-   * Replace `YOUR_API_KEY` with your actual Gemini API Key.
-4. Launch the local ADK server:
-   ```bash
+Production Deployment Dockerfile: A multi-stage setup that installs uv, creates a virtual environment, and executes the server. We optimized the container command to bind to dynamic hosting ports: render.yaml: The infrastructure-as-code blueprint defining a web service running Python. It includes: Proper environment setups (GOOGLE_API_KEY and GEMINI_API_KEY passed to authenticate the Gemini SDK). Auto-routing and health checks configured on the root route /health. Automatic triggers to build and spin up the Docker container whenever changes are pushed to GitHub.
    agents-cli playground
    # Or run directly via: uv run adk web .
    ```
-   This will start the local agent server on port **8000** and open the ADK developer playground.
-5. In your web browser at `http://localhost:8001`, click the **CropCare AI** robot bubble in the bottom right corner to start chatting with the agent! The frontend will communicate directly with the local server to run your agricultural queries and call the MCP server tools under the hood.
 
