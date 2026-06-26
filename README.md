@@ -4,7 +4,7 @@ CropCare is an interactive, responsive, and aesthetically premium Single Page Ap
 
 ![CropCare Dashboard Screenshot](screenshot.png)
 
----
+------
 
 ## 📋 Table of Contents
 1. [Project Details & Overview](#-project-details--overview)
