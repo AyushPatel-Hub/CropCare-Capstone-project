@@ -88,6 +88,5 @@ ADK and the Chatbot Agent Definition (app/agent.py): Defines an Agent initialize
 
 Production Deployment Dockerfile: A multi-stage setup that installs uv, creates a virtual environment, and executes the server. We optimized the container command to bind to dynamic hosting ports: render.yaml: The infrastructure-as-code blueprint defining a web service running Python. It includes: Proper environment setups (GOOGLE_API_KEY and GEMINI_API_KEY passed to authenticate the Gemini SDK). Auto-routing and health checks configured on the root route /health. Automatic triggers to build and spin up the Docker container whenever changes are pushed to GitHub.
    agents-cli playground
-   # Or run directly via: uv run adk web .
-   ```
+  
 
